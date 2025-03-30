@@ -9,6 +9,7 @@ import { Message } from "@/lib/chat-helpers";
 import { generateGroqResponse, getQuickResponse } from "@/lib/groq";
 import { createCustomerInquiry, fetchFaqs, testSupabaseConnection, verifyCustomerInquiriesTable } from "@/lib/supabase";
 import { Navbar } from "@/components/layout/Navbar";
+import { supabase } from "@/lib/supabase";
 
 const Index = () => {
   const { toast } = useToast();
@@ -89,26 +90,57 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // First, check for matching FAQ
-      const matchingFaq = findMatchingFaq(content);
-      let responseContent;
+      // First, check for FAQ match in Supabase
+      console.log("Checking Supabase FAQs for:", content);
+      const { data: faqMatches, error: faqError } = await supabase
+        .from('faqs')
+        .select('*');
 
-      if (matchingFaq) {
-        // Use FAQ answer if found
-        responseContent = matchingFaq.answer;
-        console.log("Using FAQ answer:", matchingFaq);
+      if (faqError) {
+        console.error("Error checking FAQs:", faqError);
+      }
+
+      let responseContent;
+      
+      // Try to find a matching FAQ using more flexible matching
+      if (faqMatches && faqMatches.length > 0) {
+        const userQuery = content.toLowerCase();
+        const matchingFaq = faqMatches.find(faq => {
+          const question = faq.question.toLowerCase();
+          // Check if the user's question contains keywords from the FAQ question
+          const keywords = question.split(' ').filter(word => word.length > 3);
+          return keywords.some(keyword => userQuery.includes(keyword));
+        });
+
+        if (matchingFaq) {
+          // Use the matching FAQ
+          responseContent = matchingFaq.answer;
+          console.log("Using FAQ answer:", matchingFaq);
+        } else {
+          // If no FAQ match, use Groq API
+          console.log("No FAQ match found, falling back to Groq");
+          const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+          
+          if (apiKey) {
+            const response = await getQuickResponse(content);
+            responseContent = response.content;
+            console.log("Groq API response received");
+          } else {
+            console.log("No Groq API key, using simulated response");
+            responseContent = getSimulatedResponse(content);
+          }
+        }
       } else {
-        // If no FAQ match, try Groq API
+        // If no FAQs at all, use Groq API
+        console.log("No FAQs found in database, falling back to Groq");
         const apiKey = import.meta.env.VITE_GROQ_API_KEY;
         
         if (apiKey) {
-          console.log("Calling Groq API...");
           const response = await getQuickResponse(content);
           responseContent = response.content;
-          console.log("Groq API response:", response);
+          console.log("Groq API response received");
         } else {
-          // Fallback to simulated response if no API key
-          console.log("Using simulated response (no Groq API key)");
+          console.log("No Groq API key, using simulated response");
           responseContent = getSimulatedResponse(content);
         }
       }

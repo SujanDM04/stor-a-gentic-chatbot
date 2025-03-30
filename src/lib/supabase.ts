@@ -354,13 +354,11 @@ export async function verifyCustomerInquiriesTable() {
       };
     }
 
-    // Try to insert a test record
+    // Try to insert a test record with the correct structure
     const testInquiry = {
-      name: "Test User",
-      email: "test@example.com",
       message: "Table structure test",
-      status: 'new' as const,
-      response: "Test response"
+      response: "Test response",
+      user_id: "test_user"
     };
 
     const { error: insertError } = await supabase
@@ -376,6 +374,12 @@ export async function verifyCustomerInquiriesTable() {
         message: "Table exists but insert failed - possible structure mismatch"
       };
     }
+
+    // Clean up test record
+    await supabase
+      .from(TABLES.CUSTOMER_INQUIRIES)
+      .delete()
+      .eq('message', 'Table structure test');
 
     return {
       exists: true,
