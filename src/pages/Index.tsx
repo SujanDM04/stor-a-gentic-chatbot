@@ -7,7 +7,7 @@ import { createFakeMessage } from "@/lib/chat-helpers";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/lib/chat-helpers";
 import { generateGroqResponse, getQuickResponse } from "@/lib/groq";
-import { createCustomerInquiry, fetchFaqs } from "@/lib/supabase";
+import { createCustomerInquiry, fetchFaqs, testSupabaseConnection, verifyCustomerInquiriesTable } from "@/lib/supabase";
 import { Navbar } from "@/components/layout/Navbar";
 
 const Index = () => {
@@ -19,14 +19,47 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [faqs, setFaqs] = useState([]);
 
-  // Load FAQs on component mount
+  // Test Supabase connection and load FAQs on mount
   useEffect(() => {
-    const loadFaqs = async () => {
-      const faqData = await fetchFaqs();
-      setFaqs(faqData);
+    const initializeApp = async () => {
+      try {
+        // Test Supabase connection
+        const connectionTest = await testSupabaseConnection();
+        if (connectionTest.success) {
+          console.log("✅ Supabase connection successful");
+          
+          // Verify table structure
+          const tableVerification = await verifyCustomerInquiriesTable();
+          console.log("Table verification result:", tableVerification);
+          
+          if (!tableVerification.exists || tableVerification.error) {
+            toast({
+              title: "Database Setup Required",
+              description: "Please check your Supabase table configuration.",
+            });
+          }
+        } else {
+          console.error("❌ Supabase connection failed:", connectionTest.error);
+          toast({
+            title: "Warning",
+            description: "Database connection issues. Some features may be limited.",
+          });
+        }
+
+        // Load FAQs
+        const faqData = await fetchFaqs();
+        setFaqs(faqData);
+      } catch (error) {
+        console.error("Initialization error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize the application properly.",
+        });
+      }
     };
-    loadFaqs();
-  }, []);
+
+    initializeApp();
+  }, [toast]);
 
   // Quick reply options
   const quickReplies = [
@@ -63,27 +96,31 @@ const Index = () => {
       if (matchingFaq) {
         // Use FAQ answer if found
         responseContent = matchingFaq.answer;
+        console.log("Using FAQ answer:", matchingFaq);
       } else {
         // If no FAQ match, try Groq API
         const apiKey = import.meta.env.VITE_GROQ_API_KEY;
         
         if (apiKey) {
+          console.log("Calling Groq API...");
           const response = await getQuickResponse(content);
           responseContent = response.content;
+          console.log("Groq API response:", response);
         } else {
           // Fallback to simulated response if no API key
+          console.log("Using simulated response (no Groq API key)");
           responseContent = getSimulatedResponse(content);
         }
       }
       
       // Save inquiry to database with the final response
-      await createCustomerInquiry({
-        name: "Chat User",
-        email: "chat@example.com", // Placeholder as we don't collect this in simple chat
+      console.log("Saving to Supabase:", { message: content, response: responseContent });
+      const inquiryResult = await createCustomerInquiry({
         message: content,
-        status: 'new',
-        response: responseContent // Store the final response
+        response: responseContent,
+        user_id: "guest"
       });
+      console.log("Supabase save result:", inquiryResult);
       
       // Add AI response to chat
       const assistantMessage = createFakeMessage("assistant", responseContent);

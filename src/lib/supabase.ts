@@ -45,13 +45,10 @@ export interface FAQ {
 
 export interface CustomerInquiry {
   id?: string;
-  name: string;
-  email: string;
-  phone?: string;
-  message: string;
-  response?: string;
-  status: 'new' | 'in-progress' | 'resolved';
   created_at?: string;
+  user_id?: string;
+  message: string;
+  response: string;
 }
 
 export interface ServiceRequest {
@@ -160,24 +157,39 @@ export async function fetchCustomerInquiries() {
   }
 }
 
-export async function createCustomerInquiry(inquiry: CustomerInquiry) {
+export const createCustomerInquiry = async (inquiry: CustomerInquiry): Promise<{ success: boolean; data?: any; error?: any }> => {
+  console.log('=== Starting createCustomerInquiry ===');
+  console.log('Inquiry data:', inquiry);
+  console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+  console.log('Supabase key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+
   try {
-    if (!isConnectedToSupabase()) {
-      console.warn("Supabase connection not configured, simulating successful creation");
-      return { success: true, id: `mock-${Date.now()}` };
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return { success: false, error: 'Supabase client not initialized' };
     }
 
+    console.log('Attempting to insert into customer_inquiries table...');
     const { data, error } = await supabase
-      .from(TABLES.CUSTOMER_INQUIRIES)
+      .from('customer_inquiries')
       .insert([inquiry])
       .select();
 
-    if (error) throw error;
-    return { success: true, id: data?.[0]?.id };
+    if (error) {
+      console.error('Supabase insert error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details
+      });
+      return { success: false, error };
+    }
+
+    console.log('Successfully inserted data:', data);
+    return { success: true, data };
+
   } catch (error) {
-    console.error("Failed to create customer inquiry:", error);
-    toast.error("Failed to save your inquiry. Please try again.");
-    return { success: false };
+    console.error('Error in createCustomerInquiry:', error);
+    return { success: false, error };
   }
 }
 
@@ -302,5 +314,80 @@ export async function bookCollection(collectionData: {
     console.error("Failed to book collection:", error);
     toast.error("Failed to book collection. Please try again later.");
     return { success: false };
+  }
+}
+
+// Test Supabase connection
+export async function testSupabaseConnection() {
+  try {
+    console.log("Testing Supabase connection...");
+    const { data, error } = await supabase
+      .from(TABLES.CUSTOMER_INQUIRIES)
+      .select('*')
+      .limit(1);
+
+    console.log("Test Supabase connection result:", { data, error });
+    return { success: !error, data, error };
+  } catch (error) {
+    console.error("Supabase connection test failed:", error);
+    return { success: false, error };
+  }
+}
+
+// Test table structure
+export async function verifyCustomerInquiriesTable() {
+  try {
+    console.log("Verifying customer_inquiries table...");
+    
+    // Try to get the table structure
+    const { data: tableInfo, error: tableError } = await supabase
+      .from(TABLES.CUSTOMER_INQUIRIES)
+      .select('*')
+      .limit(0);
+
+    if (tableError) {
+      console.error("Table verification error:", tableError);
+      return {
+        exists: false,
+        error: tableError,
+        message: "Failed to verify table structure"
+      };
+    }
+
+    // Try to insert a test record
+    const testInquiry = {
+      name: "Test User",
+      email: "test@example.com",
+      message: "Table structure test",
+      status: 'new' as const,
+      response: "Test response"
+    };
+
+    const { error: insertError } = await supabase
+      .from(TABLES.CUSTOMER_INQUIRIES)
+      .insert([testInquiry])
+      .select();
+
+    if (insertError) {
+      console.error("Test insert error:", insertError);
+      return {
+        exists: true,
+        error: insertError,
+        message: "Table exists but insert failed - possible structure mismatch"
+      };
+    }
+
+    return {
+      exists: true,
+      error: null,
+      message: "Table exists and structure is valid"
+    };
+  } catch (error) {
+    console.error("Table verification failed:", error);
+    return {
+      exists: false,
+      error,
+      message: "Failed to verify table"
+    };
   }
 }
