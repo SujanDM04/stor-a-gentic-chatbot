@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -36,6 +35,14 @@ export function Navbar() {
               >
                 Services
               </Link>
+              <a
+                href="https://calendly.com/sujandm22"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Schedule a Meeting
+              </a>
               {user && (
                 <Link
                   to="/admin"
