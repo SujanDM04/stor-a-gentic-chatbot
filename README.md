@@ -1,69 +1,66 @@
-# Welcome to your Lovable project
+# Stor-a-gentic Chatbot
 
-## Project info
+Stor-a-gentic is a chatbot application designed to assist with storage-related queries. It integrates various technologies to provide a seamless user experience.
 
-**URL**: https://lovable.dev/projects/1311f3f3-3506-40d4-9321-7084b32c92f8
+## Table of Contents
 
-## How can I edit this code?
+- [Installation](#installation)
+- [Usage](#usage)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
-There are several ways of editing your application.
+## Installation
 
-**Use Lovable**
+1. **Clone the repository:**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1311f3f3-3506-40d4-9321-7084b32c92f8) and start prompting.
+   ```bash
+   git clone https://github.com/SujanDM04/stor-a-gentic-chatbot.git
+   cd stor-a-gentic-chatbot
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+2. **Install dependencies:**
 
-**Use your preferred IDE**
+   ```bash
+   npm install
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Start the development server:**
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+   ```bash
+   npm run dev
+   ```
 
-Follow these steps:
+## Usage
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- Access the application at `http://localhost:3000` after starting the development server.
+- Use the chatbot to interact with storage-related queries.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Features
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Authentication**: Managed through the `AuthContext`.
+- **Chat Functionality**: Continuous conversation flow using `ChatContext`.
+- **Admin Dashboard**: Protected route for admin access.
+- **Integration with Supabase**: For data management.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## Project Structure
 
-**Edit a file directly in GitHub**
+- **src/App.tsx**: Main application component.
+- **src/components/layout/Navbar.tsx**: Navigation bar component.
+- **src/components/sidebar/StorageSidebar.tsx**: Sidebar for storage options.
+- **src/contexts/AuthContext.tsx**: Context for authentication.
+- **src/contexts/ChatContext.tsx**: Context for chat functionality.
+- **src/integrations/supabase/**: Integration with Supabase for backend services.
+- **src/main.tsx**: Entry point of the application.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Contributing
 
-**Use GitHub Codespaces**
+Contributions are welcome! Please follow these steps:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1311f3f3-3506-40d4-9321-7084b32c92f8) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add new feature'`).
+5. Push to the branch (`git push origin feature-branch`).
+6. Open a pull request.
